@@ -19,10 +19,10 @@ let active = null;
 
 // points[0] = start, last = end, the rest are control-point pairs (cp1, cp2)
 let points = [
-  { x: 625, y: 175 }, // start
-  { x: 450, y: 50 },  // cp1
-  { x: 250, y: 50 },  // cp2
-  { x: 79, y: 117 },  // end
+  { x: 79, y: 117 }, // start
+  { x: 250, y: 50 },  // cp1
+  { x: 450, y: 50 },  // cp2
+  { x: 625, y: 175 },  // end
 ];
 
 // --- build the SVG path string ---
