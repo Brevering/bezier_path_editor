@@ -1,0 +1,9 @@
+{
+  "name": "bezier-path-editor",
+  "version": "1.0.0",
+  "description": "Interactive cubic Bézier / motion path editor built with GSAP.",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes serve ."
+  }
+}

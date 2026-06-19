@@ -1,0 +1,142 @@
+:root {
+  --bg: #0e100f;
+  --fg: #fffce1;
+  --panel: #1a1d1b;
+  --border: #2e322f;
+  --accent: #ff5a5a;
+  --anchor: #4f9dff;
+  --control: #4fd18b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Avenir, "Segoe UI", sans-serif;
+  background-color: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 100vh;
+}
+
+header {
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  max-width: 70ch;
+  margin: 0.5rem auto 0;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  opacity: 0.75;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 900px;
+  width: 100%;
+}
+
+.control-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+input[type="number"] {
+  width: 64px;
+  padding: 0.3rem 0.4rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover {
+  background: var(--border);
+  border-color: var(--accent);
+}
+
+.stage {
+  position: relative;
+  width: 900px;
+  max-width: 100%;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fafafa;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+svg circle {
+  cursor: grab;
+}
+
+#box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  background: var(--accent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+#output {
+  max-width: 900px;
+  width: 100%;
+  overflow-x: auto;
+  padding: 0.8rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
