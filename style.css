@@ -163,7 +163,7 @@ svg {
 }
 
 #backgroundImage {
-  cursor: grab;
+  cursor: default;
 }
 
 #backgroundImage:active {
@@ -175,15 +175,8 @@ svg circle {
 }
 
 #box {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 24px;
-  height: 24px;
-  margin: -12px 0 0 -12px;
-  background: var(--accent);
-  border-radius: 6px;
-  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 #output {
