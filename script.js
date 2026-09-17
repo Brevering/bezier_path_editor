@@ -10,12 +10,17 @@ const svg = document.getElementById("svg");
 const curve = document.getElementById("curve");
 const output = document.getElementById("output");
 const box = document.getElementById("box");
+const backgroundImage = document.getElementById("backgroundImage");
+const backgroundUpload = document.getElementById("backgroundUpload");
+const clearBackground = document.getElementById("clearBackground");
+const backgroundStatus = document.getElementById("backgroundStatus");
 
 // --- state ---
 let snap = false;
 const grid = 20;
 let lockEndpoints = false;
 let active = null;
+let backgroundUrl = null;
 
 // points[0] = start, last = end, the rest are control-point pairs (cp1, cp2)
 let points = [
@@ -141,6 +146,32 @@ function applyEndpoints() {
   update();
 }
 
+// --- upload and display an image behind the path ---
+function handleBackgroundUpload(event) {
+  const [file] = event.target.files;
+  if (!file) return;
+
+  if (backgroundUrl) URL.revokeObjectURL(backgroundUrl);
+  backgroundUrl = URL.createObjectURL(file);
+  backgroundImage.setAttribute("href", backgroundUrl);
+  backgroundImage.setAttribute("visibility", "visible");
+  clearBackground.disabled = false;
+  backgroundStatus.textContent = file.name;
+}
+
+function removeBackground() {
+  if (backgroundUrl) {
+    URL.revokeObjectURL(backgroundUrl);
+    backgroundUrl = null;
+  }
+
+  backgroundImage.removeAttribute("href");
+  backgroundImage.setAttribute("visibility", "hidden");
+  backgroundUpload.value = "";
+  clearBackground.disabled = true;
+  backgroundStatus.textContent = "No image selected";
+}
+
 // --- generate a curve (single arc, or alternating S-curve when segments > 1) ---
 function generateCurve() {
   const curvature = parseFloat(document.getElementById("curvature").value);
@@ -218,5 +249,7 @@ document.getElementById("snap").addEventListener("click", toggleSnap);
 document.getElementById("preview").addEventListener("click", preview);
 document.getElementById("applyEndpoints").addEventListener("click", applyEndpoints);
 document.getElementById("lockEndpoints").addEventListener("click", toggleLockEndpoints);
+backgroundUpload.addEventListener("change", handleBackgroundUpload);
+clearBackground.addEventListener("click", removeBackground);
 
 update();
