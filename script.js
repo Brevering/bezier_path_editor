@@ -4,6 +4,8 @@ import MotionPathPlugin from "gsap/MotionPathPlugin";
 gsap.registerPlugin(MotionPathPlugin);
 
 const SVG_NS = "http://www.w3.org/2000/svg";
+const DEFAULT_SVG_WIDTH = 900;
+const DEFAULT_SVG_HEIGHT = 500;
 
 // --- DOM references ---
 const svg = document.getElementById("svg");
@@ -47,6 +49,23 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+function setSvgCanvasSize(width, height) {
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+  if (backgroundImage) {
+    backgroundImage.setAttribute("width", String(width));
+    backgroundImage.setAttribute("height", String(height));
+  }
+}
+
+function resetToDefaultCanvas() {
+  setSvgCanvasSize(DEFAULT_SVG_WIDTH, DEFAULT_SVG_HEIGHT);
+  backgroundSettings.x = 0;
+  backgroundSettings.y = 0;
+}
+
 function updateBackgroundControls() {
   const hasImage = Boolean(backgroundUrl);
 
@@ -72,12 +91,15 @@ function updateBackgroundVisuals() {
     return;
   }
 
+  const width = svg.viewBox.baseVal.width || DEFAULT_SVG_WIDTH;
+  const height = svg.viewBox.baseVal.height || DEFAULT_SVG_HEIGHT;
+
   backgroundImage.setAttribute("href", backgroundUrl);
   backgroundImage.setAttribute("visibility", backgroundSettings.visible ? "visible" : "hidden");
   backgroundImage.setAttribute("opacity", backgroundSettings.opacity);
   backgroundImage.setAttribute("preserveAspectRatio", backgroundSettings.mode === "cover" ? "xMidYMid slice" : "xMidYMid meet");
-  backgroundImage.setAttribute("width", 900);
-  backgroundImage.setAttribute("height", 500);
+  backgroundImage.setAttribute("width", width);
+  backgroundImage.setAttribute("height", height);
   backgroundImage.setAttribute("x", backgroundSettings.x);
   backgroundImage.setAttribute("y", backgroundSettings.y);
 }
@@ -150,8 +172,11 @@ function onPointerDown(event) {
 function onPointerMove(event) {
   if (backgroundDrag) {
     const { x, y } = toSvgCoords(event);
-    backgroundSettings.x = clamp(x - backgroundDrag.offsetX, -900, 900);
-    backgroundSettings.y = clamp(y - backgroundDrag.offsetY, -500, 500);
+    const svgWidth = svg.viewBox.baseVal.width || DEFAULT_SVG_WIDTH;
+    const svgHeight = svg.viewBox.baseVal.height || DEFAULT_SVG_HEIGHT;
+
+    backgroundSettings.x = clamp(x - backgroundDrag.offsetX, -svgWidth, svgWidth);
+    backgroundSettings.y = clamp(y - backgroundDrag.offsetY, -svgHeight, svgHeight);
     updateBackgroundVisuals();
     return;
   }
@@ -230,8 +255,16 @@ function handleBackgroundUpload(event) {
   backgroundSettings.x = 0;
   backgroundSettings.y = 0;
 
-  updateBackgroundVisuals();
-  updateBackgroundControls();
+  const image = new Image();
+  image.onload = () => {
+    const width = image.naturalWidth || DEFAULT_SVG_WIDTH;
+    const height = image.naturalHeight || DEFAULT_SVG_HEIGHT;
+    setSvgCanvasSize(width, height);
+    updateBackgroundVisuals();
+    updateBackgroundControls();
+    URL.revokeObjectURL(backgroundUrl);
+  };
+  image.src = backgroundUrl;
 }
 
 function removeBackground() {
@@ -250,6 +283,7 @@ function removeBackground() {
   backgroundOpacity.value = "1";
   backgroundMode.value = "fit";
 
+  resetToDefaultCanvas();
   updateBackgroundVisuals();
   updateBackgroundControls();
 }
@@ -355,6 +389,7 @@ toggleBackground.addEventListener("click", toggleBackgroundVisibility);
 backgroundOpacity.addEventListener("input", updateBackgroundOpacity);
 backgroundMode.addEventListener("change", updateBackgroundMode);
 
+resetToDefaultCanvas();
 updateBackgroundVisuals();
 updateBackgroundControls();
 update();
