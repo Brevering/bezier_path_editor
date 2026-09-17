@@ -17,6 +17,7 @@ const backgroundImage = document.getElementById("backgroundImage");
 const backgroundUpload = document.getElementById("backgroundUpload");
 const clearBackground = document.getElementById("clearBackground");
 const toggleBackground = document.getElementById("toggleBackground");
+const toggleImageDragging = document.getElementById("toggleImageDragging");
 const backgroundStatus = document.getElementById("backgroundStatus");
 const backgroundOpacity = document.getElementById("backgroundOpacity");
 const backgroundMode = document.getElementById("backgroundMode");
@@ -31,6 +32,7 @@ let active = null;
 let backgroundUrl = null;
 let backgroundFileName = "";
 let backgroundDrag = null;
+let imageDraggingEnabled = false;
 
 const backgroundSettings = {
   visible: true,
@@ -107,12 +109,14 @@ function updateBackgroundControls() {
 
   clearBackground.disabled = !hasImage;
   toggleBackground.disabled = !hasImage;
+  toggleImageDragging.disabled = !hasImage;
   backgroundOpacity.disabled = !hasImage;
   backgroundMode.disabled = !hasImage;
 
   backgroundOpacity.value = String(backgroundSettings.opacity);
   backgroundMode.value = backgroundSettings.mode;
   toggleBackground.textContent = backgroundSettings.visible ? "Hide" : "Show";
+  toggleImageDragging.textContent = `Move Image: ${imageDraggingEnabled ? "ON" : "OFF"}`;
 
   if (hasImage) {
     backgroundStatus.textContent = backgroundFileName;
@@ -137,6 +141,7 @@ function updateBackgroundVisuals() {
   backgroundImage.setAttribute("height", height);
   backgroundImage.setAttribute("x", backgroundSettings.x);
   backgroundImage.setAttribute("y", backgroundSettings.y);
+  backgroundImage.style.cursor = imageDraggingEnabled ? "grab" : "default";
 }
 
 // --- build the SVG path string ---
@@ -188,7 +193,7 @@ function toSvgCoords(event) {
 
 // --- dragging ---
 function onPointerDown(event) {
-  if (event.target === backgroundImage && backgroundUrl && backgroundSettings.visible) {
+  if (event.target === backgroundImage && backgroundUrl && backgroundSettings.visible && imageDraggingEnabled) {
     const coords = toSvgCoords(event);
     backgroundDrag = {
       offsetX: coords.x - backgroundSettings.x,
@@ -266,6 +271,13 @@ function toggleLockEndpoints(event) {
   event.currentTarget.textContent = "Lock Endpoints: " + (lockEndpoints ? "ON" : "OFF");
 }
 
+function toggleImageDraggingMode() {
+  imageDraggingEnabled = !imageDraggingEnabled;
+  backgroundDrag = null;
+  updateBackgroundControls();
+  updateBackgroundVisuals();
+}
+
 // --- apply start/end coordinates from the inputs ---
 function applyEndpoints() {
   points[0].x = parseFloat(document.getElementById("startX").value);
@@ -292,6 +304,8 @@ function handleBackgroundUpload(event) {
   backgroundSettings.opacity = parseFloat(backgroundOpacity.value) || 1;
   backgroundSettings.x = 0;
   backgroundSettings.y = 0;
+  imageDraggingEnabled = false;
+  backgroundDrag = null;
 
   const image = new Image();
   image.onload = () => {
@@ -326,6 +340,8 @@ function removeBackground() {
   backgroundUpload.value = "";
   backgroundOpacity.value = "1";
   backgroundMode.value = "fit";
+  imageDraggingEnabled = false;
+  backgroundDrag = null;
 
   resetToDefaultCanvas();
   updateEndpointInputs();
@@ -338,6 +354,7 @@ function toggleBackgroundVisibility() {
   if (!backgroundUrl) return;
 
   backgroundSettings.visible = !backgroundSettings.visible;
+  backgroundDrag = null;
   updateBackgroundVisuals();
   updateBackgroundControls();
 }
@@ -433,6 +450,7 @@ document.getElementById("lockEndpoints").addEventListener("click", toggleLockEnd
 backgroundUpload.addEventListener("change", handleBackgroundUpload);
 clearBackground.addEventListener("click", removeBackground);
 toggleBackground.addEventListener("click", toggleBackgroundVisibility);
+toggleImageDragging.addEventListener("click", toggleImageDraggingMode);
 backgroundOpacity.addEventListener("input", updateBackgroundOpacity);
 backgroundMode.addEventListener("change", updateBackgroundMode);
 
