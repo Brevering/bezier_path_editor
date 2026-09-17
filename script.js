@@ -19,6 +19,8 @@ const toggleBackground = document.getElementById("toggleBackground");
 const backgroundStatus = document.getElementById("backgroundStatus");
 const backgroundOpacity = document.getElementById("backgroundOpacity");
 const backgroundMode = document.getElementById("backgroundMode");
+const scalePathOnUpload = document.getElementById("scalePathOnUpload");
+const canvasSize = document.getElementById("canvasSize");
 
 // --- state ---
 let snap = false;
@@ -49,21 +51,53 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
+function getCanvasSize() {
+  return {
+    width: svg.viewBox.baseVal.width || DEFAULT_SVG_WIDTH,
+    height: svg.viewBox.baseVal.height || DEFAULT_SVG_HEIGHT,
+  };
+}
+
+function updateCanvasInfo() {
+  const { width, height } = getCanvasSize();
+  canvasSize.textContent = `${Math.round(width)} × ${Math.round(height)} px`;
+}
+
 function setSvgCanvasSize(width, height) {
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-  if (backgroundImage) {
-    backgroundImage.setAttribute("width", String(width));
-    backgroundImage.setAttribute("height", String(height));
-  }
+  backgroundImage.setAttribute("width", String(width));
+  backgroundImage.setAttribute("height", String(height));
+  updateCanvasInfo();
 }
 
 function resetToDefaultCanvas() {
   setSvgCanvasSize(DEFAULT_SVG_WIDTH, DEFAULT_SVG_HEIGHT);
   backgroundSettings.x = 0;
   backgroundSettings.y = 0;
+}
+
+function scalePath(fromWidth, fromHeight, toWidth, toHeight) {
+  if (!scalePathOnUpload.checked || !fromWidth || !fromHeight) return;
+
+  const scaleX = toWidth / fromWidth;
+  const scaleY = toHeight / fromHeight;
+
+  points = points.map((point) => ({
+    x: point.x * scaleX,
+    y: point.y * scaleY,
+  }));
+}
+
+function updateEndpointInputs() {
+  const start = points[0];
+  const end = points[points.length - 1];
+  document.getElementById("startX").value = String(Math.round(start.x));
+  document.getElementById("startY").value = String(Math.round(start.y));
+  document.getElementById("endX").value = String(Math.round(end.x));
+  document.getElementById("endY").value = String(Math.round(end.y));
 }
 
 function updateBackgroundControls() {
@@ -91,8 +125,7 @@ function updateBackgroundVisuals() {
     return;
   }
 
-  const width = svg.viewBox.baseVal.width || DEFAULT_SVG_WIDTH;
-  const height = svg.viewBox.baseVal.height || DEFAULT_SVG_HEIGHT;
+  const { width, height } = getCanvasSize();
 
   backgroundImage.setAttribute("href", backgroundUrl);
   backgroundImage.setAttribute("visibility", backgroundSettings.visible ? "visible" : "hidden");
@@ -142,8 +175,9 @@ function update() {
 // --- convert a pointer event to SVG-local coordinates ---
 function toSvgCoords(event) {
   const rect = svg.getBoundingClientRect();
-  const scaleX = svg.viewBox.baseVal.width / rect.width || 1;
-  const scaleY = svg.viewBox.baseVal.height / rect.height || 1;
+  const { width, height } = getCanvasSize();
+  const scaleX = width / rect.width || 1;
+  const scaleY = height / rect.height || 1;
   return {
     x: (event.clientX - rect.left) * scaleX,
     y: (event.clientY - rect.top) * scaleY,
@@ -172,11 +206,10 @@ function onPointerDown(event) {
 function onPointerMove(event) {
   if (backgroundDrag) {
     const { x, y } = toSvgCoords(event);
-    const svgWidth = svg.viewBox.baseVal.width || DEFAULT_SVG_WIDTH;
-    const svgHeight = svg.viewBox.baseVal.height || DEFAULT_SVG_HEIGHT;
+    const { width, height } = getCanvasSize();
 
-    backgroundSettings.x = clamp(x - backgroundDrag.offsetX, -svgWidth, svgWidth);
-    backgroundSettings.y = clamp(y - backgroundDrag.offsetY, -svgHeight, svgHeight);
+    backgroundSettings.x = clamp(x - backgroundDrag.offsetX, -width, width);
+    backgroundSettings.y = clamp(y - backgroundDrag.offsetY, -height, height);
     updateBackgroundVisuals();
     return;
   }
@@ -192,6 +225,7 @@ function onPointerMove(event) {
 
   points[active].x = x;
   points[active].y = y;
+  updateEndpointInputs();
   update();
 }
 
@@ -215,6 +249,7 @@ function addSegment() {
 function removeSegment() {
   if (points.length <= 4) return;
   points.splice(-3, 3);
+  updateEndpointInputs();
   update();
 }
 
@@ -248,6 +283,7 @@ function handleBackgroundUpload(event) {
 
   if (backgroundUrl) URL.revokeObjectURL(backgroundUrl);
 
+  const { width: oldWidth, height: oldHeight } = getCanvasSize();
   backgroundUrl = URL.createObjectURL(file);
   backgroundFileName = file.name;
   backgroundSettings.visible = true;
@@ -259,10 +295,13 @@ function handleBackgroundUpload(event) {
   image.onload = () => {
     const width = image.naturalWidth || DEFAULT_SVG_WIDTH;
     const height = image.naturalHeight || DEFAULT_SVG_HEIGHT;
+
+    scalePath(oldWidth, oldHeight, width, height);
     setSvgCanvasSize(width, height);
+    updateEndpointInputs();
     updateBackgroundVisuals();
     updateBackgroundControls();
-    URL.revokeObjectURL(backgroundUrl);
+    update();
   };
   image.src = backgroundUrl;
 }
@@ -274,6 +313,9 @@ function removeBackground() {
     backgroundFileName = "";
   }
 
+  const { width: oldWidth, height: oldHeight } = getCanvasSize();
+  scalePath(oldWidth, oldHeight, DEFAULT_SVG_WIDTH, DEFAULT_SVG_HEIGHT);
+
   backgroundSettings.visible = true;
   backgroundSettings.opacity = 1;
   backgroundSettings.mode = "fit";
@@ -284,8 +326,10 @@ function removeBackground() {
   backgroundMode.value = "fit";
 
   resetToDefaultCanvas();
+  updateEndpointInputs();
   updateBackgroundVisuals();
   updateBackgroundControls();
+  update();
 }
 
 function toggleBackgroundVisibility() {
@@ -347,6 +391,7 @@ function generateCurve() {
   }
 
   points = newPoints;
+  updateEndpointInputs();
   update();
 }
 
@@ -392,4 +437,5 @@ backgroundMode.addEventListener("change", updateBackgroundMode);
 resetToDefaultCanvas();
 updateBackgroundVisuals();
 updateBackgroundControls();
+updateEndpointInputs();
 update();

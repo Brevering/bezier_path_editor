@@ -45,12 +45,12 @@
 
     <div class="control-group">
       <strong>Start:</strong>
-      <label>X <input id="startX" type="number" value="625" /></label>
-      <label>Y <input id="startY" type="number" value="175" /></label>
+      <label>X <input id="startX" type="number" value="79" /></label>
+      <label>Y <input id="startY" type="number" value="117" /></label>
 
       <strong>End:</strong>
-      <label>X <input id="endX" type="number" value="79" /></label>
-      <label>Y <input id="endY" type="number" value="117" /></label>
+      <label>X <input id="endX" type="number" value="625" /></label>
+      <label>Y <input id="endY" type="number" value="175" /></label>
 
       <button id="applyEndpoints" type="button">Apply</button>
     </div>
@@ -67,9 +67,17 @@
         <option value="fit">Fit</option>
         <option value="cover">Cover</option>
       </select>
+      <label class="checkbox-label">
+        <input id="scalePathOnUpload" type="checkbox" checked />
+        Scale path to image
+      </label>
       <span id="backgroundStatus" role="status" aria-live="polite">No image selected</span>
     </div>
   </section>
+
+  <div class="canvas-info" role="status" aria-live="polite">
+    Canvas: <strong id="canvasSize">900 × 500 px</strong>
+  </div>
 
   <div class="stage">
     <svg id="svg" width="900" height="500" viewBox="0 0 900 500">
