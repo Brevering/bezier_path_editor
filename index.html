@@ -4,9 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bezier Path Editor</title>
-  <script type="importmap">
-    {"imports":{"gsap":"https://esm.sh/gsap@3.14.2","gsap/":"https://esm.sh/gsap@3.14.2/"}}
-  </script>
+  <script type="importmap">{"imports":{"gsap":"https://esm.sh/gsap@3.14.2","gsap/":"https://esm.sh/gsap@3.14.2/"}}</script>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -52,12 +50,21 @@
     </div>
   </section>
   <div class="canvas-info" role="status" aria-live="polite">Canvas: <strong id="canvasSize">900 × 500 px</strong></div>
-  <div class="stage">
-    <svg id="svg" width="900" height="500" viewBox="0 0 900 500">
-      <image id="backgroundImage" x="0" y="0" width="900" height="500" preserveAspectRatio="xMidYMid meet" visibility="hidden" pointer-events="all" />
-      <path id="curve" fill="none" stroke="#ff5a5a" stroke-width="2" />
-      <rect id="box" x="-12" y="-12" width="24" height="24" rx="6" fill="#ff5a5a" pointer-events="none" />
-    </svg>
+  <div class="canvas-layout">
+    <aside class="points-panel">
+      <h2>Points</h2>
+      <table>
+        <thead><tr><th>#</th><th>Type</th><th>X</th><th>Y</th></tr></thead>
+        <tbody id="pointsTableBody"></tbody>
+      </table>
+    </aside>
+    <div class="stage">
+      <svg id="svg" width="900" height="500" viewBox="0 0 900 500">
+        <image id="backgroundImage" x="0" y="0" width="900" height="500" preserveAspectRatio="xMidYMid meet" visibility="hidden" pointer-events="all" />
+        <path id="curve" fill="none" stroke="#ff5a5a" stroke-width="2" />
+        <rect id="box" x="-12" y="-12" width="24" height="24" rx="6" fill="#ff5a5a" pointer-events="none" />
+      </svg>
+    </div>
   </div>
   <pre id="output"></pre>
   <script type="module" src="./script.js"></script>
