@@ -9,6 +9,7 @@ const DEFAULT_SVG_HEIGHT = 500;
 
 // --- DOM references ---
 const svg = document.getElementById("svg");
+const stage = document.querySelector(".stage");
 const curve = document.getElementById("curve");
 const output = document.getElementById("output");
 const box = document.getElementById("box");
@@ -67,6 +68,7 @@ function setSvgCanvasSize(width, height) {
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  stage.style.setProperty("--canvas-width", `${width}px`);
 
   backgroundImage.setAttribute("width", String(width));
   backgroundImage.setAttribute("height", String(height));

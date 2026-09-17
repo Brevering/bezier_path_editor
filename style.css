@@ -149,7 +149,7 @@ button:disabled {
 
 .stage {
   position: relative;
-  width: 900px;
+  width: min(100%, var(--canvas-width, 900px));
   max-width: 100%;
 }
 
