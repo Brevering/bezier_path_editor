@@ -48,7 +48,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
-  max-width: 900px;
+  max-width: 980px;
   width: 100%;
 }
 
@@ -86,14 +86,27 @@ input[type="file"] {
   color: var(--fg);
 }
 
+input[type="range"] {
+  width: 110px;
+}
+
+select {
+  padding: 0.35rem 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
 .background-controls {
-  max-width: 900px;
+  max-width: 980px;
   width: 100%;
 }
 
 #backgroundStatus {
   min-width: 12ch;
-  max-width: 26ch;
+  max-width: 30ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -138,7 +151,11 @@ svg {
 }
 
 #backgroundImage {
-  pointer-events: none;
+  cursor: grab;
+}
+
+#backgroundImage:active {
+  cursor: grabbing;
 }
 
 svg circle {

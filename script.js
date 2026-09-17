@@ -13,7 +13,10 @@ const box = document.getElementById("box");
 const backgroundImage = document.getElementById("backgroundImage");
 const backgroundUpload = document.getElementById("backgroundUpload");
 const clearBackground = document.getElementById("clearBackground");
+const toggleBackground = document.getElementById("toggleBackground");
 const backgroundStatus = document.getElementById("backgroundStatus");
+const backgroundOpacity = document.getElementById("backgroundOpacity");
+const backgroundMode = document.getElementById("backgroundMode");
 
 // --- state ---
 let snap = false;
@@ -21,6 +24,16 @@ const grid = 20;
 let lockEndpoints = false;
 let active = null;
 let backgroundUrl = null;
+let backgroundFileName = "";
+let backgroundDrag = null;
+
+const backgroundSettings = {
+  visible: true,
+  opacity: 1,
+  mode: "fit",
+  x: 0,
+  y: 0,
+};
 
 // points[0] = start, last = end, the rest are control-point pairs (cp1, cp2)
 let points = [
@@ -29,6 +42,45 @@ let points = [
   { x: 450, y: 50 },  // cp2
   { x: 625, y: 175 },  // end
 ];
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function updateBackgroundControls() {
+  const hasImage = Boolean(backgroundUrl);
+
+  clearBackground.disabled = !hasImage;
+  toggleBackground.disabled = !hasImage;
+  backgroundOpacity.disabled = !hasImage;
+  backgroundMode.disabled = !hasImage;
+
+  backgroundOpacity.value = String(backgroundSettings.opacity);
+  backgroundMode.value = backgroundSettings.mode;
+  toggleBackground.textContent = backgroundSettings.visible ? "Hide" : "Show";
+
+  if (hasImage) {
+    backgroundStatus.textContent = backgroundFileName;
+  } else {
+    backgroundStatus.textContent = "No image selected";
+  }
+}
+
+function updateBackgroundVisuals() {
+  if (!backgroundUrl) {
+    backgroundImage.setAttribute("visibility", "hidden");
+    return;
+  }
+
+  backgroundImage.setAttribute("href", backgroundUrl);
+  backgroundImage.setAttribute("visibility", backgroundSettings.visible ? "visible" : "hidden");
+  backgroundImage.setAttribute("opacity", backgroundSettings.opacity);
+  backgroundImage.setAttribute("preserveAspectRatio", backgroundSettings.mode === "cover" ? "xMidYMid slice" : "xMidYMid meet");
+  backgroundImage.setAttribute("width", 900);
+  backgroundImage.setAttribute("height", 500);
+  backgroundImage.setAttribute("x", backgroundSettings.x);
+  backgroundImage.setAttribute("y", backgroundSettings.y);
+}
 
 // --- build the SVG path string ---
 function buildPath() {
@@ -78,6 +130,15 @@ function toSvgCoords(event) {
 
 // --- dragging ---
 function onPointerDown(event) {
+  if (event.target === backgroundImage && backgroundUrl && backgroundSettings.visible) {
+    const coords = toSvgCoords(event);
+    backgroundDrag = {
+      offsetX: coords.x - backgroundSettings.x,
+      offsetY: coords.y - backgroundSettings.y,
+    };
+    return;
+  }
+
   if (event.target.tagName !== "circle") return;
 
   const index = parseInt(event.target.dataset.index, 10);
@@ -87,6 +148,14 @@ function onPointerDown(event) {
 }
 
 function onPointerMove(event) {
+  if (backgroundDrag) {
+    const { x, y } = toSvgCoords(event);
+    backgroundSettings.x = clamp(x - backgroundDrag.offsetX, -900, 900);
+    backgroundSettings.y = clamp(y - backgroundDrag.offsetY, -500, 500);
+    updateBackgroundVisuals();
+    return;
+  }
+
   if (active === null) return;
 
   let { x, y } = toSvgCoords(event);
@@ -102,6 +171,7 @@ function onPointerMove(event) {
 }
 
 function onPointerUp() {
+  backgroundDrag = null;
   active = null;
 }
 
@@ -152,24 +222,54 @@ function handleBackgroundUpload(event) {
   if (!file) return;
 
   if (backgroundUrl) URL.revokeObjectURL(backgroundUrl);
+
   backgroundUrl = URL.createObjectURL(file);
-  backgroundImage.setAttribute("href", backgroundUrl);
-  backgroundImage.setAttribute("visibility", "visible");
-  clearBackground.disabled = false;
-  backgroundStatus.textContent = file.name;
+  backgroundFileName = file.name;
+  backgroundSettings.visible = true;
+  backgroundSettings.opacity = parseFloat(backgroundOpacity.value) || 1;
+  backgroundSettings.x = 0;
+  backgroundSettings.y = 0;
+
+  updateBackgroundVisuals();
+  updateBackgroundControls();
 }
 
 function removeBackground() {
   if (backgroundUrl) {
     URL.revokeObjectURL(backgroundUrl);
     backgroundUrl = null;
+    backgroundFileName = "";
   }
 
-  backgroundImage.removeAttribute("href");
-  backgroundImage.setAttribute("visibility", "hidden");
+  backgroundSettings.visible = true;
+  backgroundSettings.opacity = 1;
+  backgroundSettings.mode = "fit";
+  backgroundSettings.x = 0;
+  backgroundSettings.y = 0;
   backgroundUpload.value = "";
-  clearBackground.disabled = true;
-  backgroundStatus.textContent = "No image selected";
+  backgroundOpacity.value = "1";
+  backgroundMode.value = "fit";
+
+  updateBackgroundVisuals();
+  updateBackgroundControls();
+}
+
+function toggleBackgroundVisibility() {
+  if (!backgroundUrl) return;
+
+  backgroundSettings.visible = !backgroundSettings.visible;
+  updateBackgroundVisuals();
+  updateBackgroundControls();
+}
+
+function updateBackgroundOpacity(event) {
+  backgroundSettings.opacity = parseFloat(event.target.value);
+  updateBackgroundVisuals();
+}
+
+function updateBackgroundMode(event) {
+  backgroundSettings.mode = event.target.value;
+  updateBackgroundVisuals();
 }
 
 // --- generate a curve (single arc, or alternating S-curve when segments > 1) ---
@@ -251,5 +351,10 @@ document.getElementById("applyEndpoints").addEventListener("click", applyEndpoin
 document.getElementById("lockEndpoints").addEventListener("click", toggleLockEndpoints);
 backgroundUpload.addEventListener("change", handleBackgroundUpload);
 clearBackground.addEventListener("click", removeBackground);
+toggleBackground.addEventListener("click", toggleBackgroundVisibility);
+backgroundOpacity.addEventListener("input", updateBackgroundOpacity);
+backgroundMode.addEventListener("change", updateBackgroundMode);
 
+updateBackgroundVisuals();
+updateBackgroundControls();
 update();
